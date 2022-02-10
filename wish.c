@@ -36,3 +36,4 @@ mode_t get_mode_t(int argc,char*argv[]){
 
 }
 //11号工作：填完坑,能够完成BATCH,INTERACTIVE的功能
+//随后继续看Swapping的部分
