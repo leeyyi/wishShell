@@ -1,0 +1,1 @@
+/usr/bin/cc   -rdynamic CMakeFiles/wish.dir/wish.c.o  -o wish 

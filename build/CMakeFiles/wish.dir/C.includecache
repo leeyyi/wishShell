@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/liyuyi/shell_proj/PATH.h
+
+/home/liyuyi/shell_proj/constants.h
+
+/home/liyuyi/shell_proj/wish.c
+wish.h
+/home/liyuyi/shell_proj/wish.h
+
+/home/liyuyi/shell_proj/wish.h
+stdio.h
+-
+string.h
+-
+./PATH.h
+/home/liyuyi/shell_proj/PATH.h
+./constants.h
+/home/liyuyi/shell_proj/constants.h
+
