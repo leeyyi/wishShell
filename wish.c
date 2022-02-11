@@ -42,6 +42,8 @@ void IM()
         size_t size=0;
         int return_code=
         getline(&str,&size,stdin);
+        //注意getline会读入换行符
+        str[strlen(str)-1]='\0';
         if(return_code==-1){
             //error fix code:
             break;
@@ -53,6 +55,7 @@ void IM()
             //解析命令
             insSet *myIns = parser(str);
             //执行命令
+            
             int exec_result = exec(myIns);
             if(exec_result==END_LOOP)
             break;

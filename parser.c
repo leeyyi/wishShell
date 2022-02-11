@@ -121,13 +121,14 @@ int exec(insSet*ins){
                 {
                     break;
                 }
-                perror(NULL);
+                printf("%s%s%d\n",tmpAbs,ins->instructions[i],absoluteOK);
                 free(tmpAbs);
                 tmpAbs=NULL;
             }
             
         }
         char*tmpExec;
+        
         if(absoluteOK){
             if(access(ins->instructions[i],X_OK)==0)
             {
@@ -143,13 +144,17 @@ int exec(insSet*ins){
         }
         pid_t child = fork();
         if(child>0){
-            //child process
-            execv(tmpExec,ins->args[i]);
-        }
-        else if(child==0){
             //parent process
             waitpid(child,NULL,WUNTRACED|WCONTINUED);
             return 0;
+        }
+        else if(child==0){
+            //child process
+            if(execv(tmpExec,ins->args[i])==-1){
+                
+                printf("[error]occurred in execv.\n");
+                exit(1);
+            }
         }
         else {
             printf("[exec:fork]error occurs.\n");
