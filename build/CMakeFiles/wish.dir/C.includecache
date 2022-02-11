@@ -19,6 +19,8 @@ stdio.h
 -
 string.h
 -
+stdlib.h
+-
 ./PATH.h
 /home/liyuyi/shell_proj/PATH.h
 ./constants.h
