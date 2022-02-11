@@ -1,4 +1,5 @@
 #include"wish.h"
+#include"parser.h"
 PATH shellPath;
 //notice the difference between relative path and absolute path
 //path related issues
@@ -35,13 +36,37 @@ void wishInit(){
 }
 void IM()
 {
-    //interactive mode
-    //waiting for build-in command exit
+    do{
+        printf("wish> ");
+        char *str =NULL;
+        size_t size=0;
+        int return_code=
+        getline(&str,&size,stdin);
+        if(return_code==-1){
+            //error fix code:
+            break;
+        }
+        else if(return_code==0){
+            continue;
+        }
+        else{
+            //解析命令
+            insSet *myIns = parser(str);
+            //执行命令
+            int exec_result = exec(myIns);
+            if(exec_result==END_LOOP)
+            break;
+        }
+    }while(1);
     //只要接受到的不是exit或者是eof,那就不用退出,注意错误处理
-    //a infinite loop
 }
 my_mode_t get_mode_t(int argc,char*argv[]){
-
+    if(argc==1)
+    return INTER_MODE;
+    else if(argc==2)
+    return BATCH_MODE;
+    else 
+    return ERROR_MODE;
 }
 void add_path(const char *str){
     if(shellPath.path==0){

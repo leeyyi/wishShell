@@ -1,3 +1,0 @@
-/home/liyuyi/shell_proj/build/CMakeFiles/rebuild_cache.dir
-/home/liyuyi/shell_proj/build/CMakeFiles/edit_cache.dir
-/home/liyuyi/shell_proj/build/CMakeFiles/wish.dir
