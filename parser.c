@@ -10,7 +10,6 @@
 #define defaultSize 10
 extern PATH shellPath;
 struct __insSet{
-    char**instructions;
     char ***args;
 };
 insSet *parser(const char*Str){
@@ -25,12 +24,11 @@ insSet *parser(const char*Str){
     //初代版本就假装只有一个命令
     //初始化
     int numOfIns=1;
-    tmp->instructions=malloc(sizeof(char*)*(numOfIns+1));
-    if(tmp->instructions==NULL){
+    tmp->args=malloc(sizeof(char**)*(numOfIns+1));
+    if(tmp->args==NULL){
         printf("[parser]:not enough space!!!.\n");
         exit(1);
     }
-    tmp->args=malloc(sizeof(char**)*(numOfIns+1));
     //填写内容
     //第一个单词是命令
     short int isSet=-1;
@@ -49,12 +47,10 @@ insSet *parser(const char*Str){
         isSet=i;
     }
     if(isSet==-1){
-        tmp->instructions[0]=NULL;//只输入了空格
+        tmp->args[0]=NULL;//只输入了空格
         return tmp;
     }
     else{
-        tmp->instructions[0]=strdup(&str[isSet]);
-        tmp->instructions[1]=NULL;
         //填写参数
         int totalSize=0;
         tmp->args[0]=malloc(sizeof(char*)*(maxArgc+1));
@@ -62,10 +58,12 @@ insSet *parser(const char*Str){
             printf("[parser:]not enough space!!!.\n");
             exit(1);
         }
+        tmp->args[0][0]=strdup(&str[isSet]);
+
         int i ;
         int current=0;//0代表当前是剔除空格,1代表当前扫描单词
         int startOfArg;
-        int totalArg=0;
+        int totalArg=1;
         for(i = endOfStr+1;str[i]!='\0';++i){
             if(current==0)
             {
@@ -95,44 +93,40 @@ insSet *parser(const char*Str){
     return tmp;
 }
 void afterExec(insSet* ins){
-    for(int i =0;ins->instructions[i]!=NULL;++i){
-        free(ins->instructions[i]);
+    for(int i =0;ins->args[i]!=NULL;++i){
         for(int j =0;ins->args[i][j]!=NULL;++j){
             free(ins->args[i][j]);
         }
         free(ins->args[i]);
     }
-    free(ins->instructions);
     free(ins->args);
     free(ins);
 }
 int exec(insSet*ins){
     //对于每一条指令
-    for(int i =0;ins->instructions[i]!=NULL;++i){
+    for(int i =0;ins->args[i]!=NULL;++i){
         int absoluteOK=1;//为0 是相对路径
         char *tmpAbs=NULL;
-        if(ins->instructions[i][0]!='/'&&ins->instructions[i][0]!='.'){
+        if(ins->args[i][0][0]!='/'&&ins->args[i][0][0]!='.'){
             for(int j =0;j<shellPath.counts;++j){
-                tmpAbs = malloc(sizeof(char)*(strlen(shellPath.path[j])+strlen(ins->instructions[i])+1));
+                tmpAbs = malloc(sizeof(char)*(strlen(shellPath.path[j])+strlen(ins->args[i][0])+1));
                 strcpy(tmpAbs,shellPath.path[j]);
                 strcat(tmpAbs,"/");
-                strcat(tmpAbs,ins->instructions[i]);
+                strcat(tmpAbs,ins->args[i][0]);
                 if((absoluteOK=access(tmpAbs,X_OK))==0)
                 {
                     break;
                 }
-                printf("%s%s%d\n",tmpAbs,ins->instructions[i],absoluteOK);
                 free(tmpAbs);
                 tmpAbs=NULL;
             }
             
         }
         char*tmpExec;
-        
         if(absoluteOK){
-            if(access(ins->instructions[i],X_OK)==0)
+            if(access(ins->args[i][0],X_OK)==0)
             {
-                tmpExec=ins->instructions[i];
+                tmpExec=ins->args[i][0];
             }
             else{
                 printf("the file is not existed.\n");
@@ -141,7 +135,11 @@ int exec(insSet*ins){
         else{
             //exec tmpAbs;
             tmpExec=tmpAbs;
+            //修正执行参数
+            free(ins->args[i][0]);
+            ins->args[i][0]=tmpExec;
         }
+        
         pid_t child = fork();
         if(child>0){
             //parent process
@@ -150,7 +148,7 @@ int exec(insSet*ins){
         }
         else if(child==0){
             //child process
-            if(execv(tmpExec,ins->args[i])==-1){
+            if(execv(ins->args[i][0],ins->args[i])==-1){
                 
                 printf("[error]occurred in execv.\n");
                 exit(1);
