@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/PATH.h
+
+../include/parser.h
+
+/home/liyuyi/shell_proj/src/parser.c
+parser.h
+/home/liyuyi/shell_proj/src/parser.h
+PATH.h
+/home/liyuyi/shell_proj/src/PATH.h
+stdlib.h
+-
+string.h
+-
+unistd.h
+-
+stdio.h
+-
+sys/types.h
+-
+sys/wait.h
+-
+errno.h
+-
+
