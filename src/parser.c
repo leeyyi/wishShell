@@ -8,6 +8,7 @@
 #include<sys/wait.h>
 #include<errno.h>
 #define defaultSize 10
+extern FILE* FP;
 extern PATH shellPath;
 struct __insSet{
     char ***args;
@@ -32,7 +33,7 @@ insSet *parser(const char*Str){
     //填写内容
     //第一个单词是命令
     short int isSet=-1;
-    short int endOfStr;
+    short int endOfStr=-1;
     for(int i =0;str[i]!='\0';++i){
         if(str[i]==' '){
             if(isSet==-1)
@@ -43,7 +44,7 @@ insSet *parser(const char*Str){
                 break;
             }
         }
-        if(isSet==-1)
+        else if(isSet==-1)
         isSet=i;
     }
     if(isSet==-1){
@@ -59,11 +60,11 @@ insSet *parser(const char*Str){
             exit(1);
         }
         tmp->args[0][0]=strdup(&str[isSet]);
-
-        int i ;
+        int totalArg=1;
+        if(endOfStr!=-1)    
+        {int i ;
         int current=0;//0代表当前是剔除空格,1代表当前扫描单词
         int startOfArg;
-        int totalArg=1;
         for(i = endOfStr+1;str[i]!='\0';++i){
             if(current==0)
             {
@@ -86,7 +87,7 @@ insSet *parser(const char*Str){
                 }
                 
             }
-        }
+        }}
         tmp->args[0][totalArg]=NULL;
     }
     free(str);
@@ -122,24 +123,19 @@ int exec(insSet*ins){
             }
             
         }
-        char*tmpExec;
         if(absoluteOK){
             if(access(ins->args[i][0],X_OK)==0)
             {
-                tmpExec=ins->args[i][0];
             }
             else{
                 printf("the file is not existed.\n");
             }
         }
         else{
-            //exec tmpAbs;
-            tmpExec=tmpAbs;
             //修正执行参数
             free(ins->args[i][0]);
-            ins->args[i][0]=tmpExec;
+            ins->args[i][0]=tmpAbs;
         }
-        
         pid_t child = fork();
         if(child>0){
             //parent process
@@ -148,8 +144,9 @@ int exec(insSet*ins){
         }
         else if(child==0){
             //child process
+            if(FP)
+            fclose(FP);
             if(execv(ins->args[i][0],ins->args[i])==-1){
-                
                 printf("[error]occurred in execv.\n");
                 exit(1);
             }
@@ -158,7 +155,6 @@ int exec(insSet*ins){
             printf("[exec:fork]error occurs.\n");
             exit(1);
         }
-        free(tmpAbs);
     }
     //执行完指令之后,要把所有内存都free掉
     afterExec(ins);

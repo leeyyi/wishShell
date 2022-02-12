@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(wish)
 
-add_executable(wish src/wish.c src/parser.c)
+add_executable(wish src/wish.c src/parser.c src/batch.c)
 
 target_include_directories(wish
     PRIVATE

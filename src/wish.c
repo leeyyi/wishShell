@@ -1,5 +1,8 @@
 #include"wish.h"
 #include"parser.h"
+#include"batch.h"
+#include<unistd.h>
+char error_message[30] = "An error has occurred\n";
 PATH shellPath;
 //notice the difference between relative path and absolute path
 //path related issues
@@ -17,7 +20,8 @@ int main(int argc,char *argv[]){
     my_mode_t MODE = get_mode_t(argc,argv);
     switch(MODE){
         case BATCH_MODE:
-        //do sth;
+        BATCH(argv[1]);
+        exit(0);
         break;
         case INTER_MODE:
         IM();
@@ -43,6 +47,7 @@ void IM()
         int return_code=
         getline(&str,&size,stdin);
         //注意getline会读入换行符
+        if(str[strlen(str)-1]=='\n')
         str[strlen(str)-1]='\0';
         if(return_code==-1){
             //error fix code:
@@ -77,7 +82,7 @@ void add_path(const char *str){
         shellPath.path = malloc(sizeof(char*));
         if(shellPath.path==NULL)
         {
-            printf("[shellPath init:]not enough space!!!\n");
+            write(STDERR_FILENO, error_message, strlen(error_message));
             exit(1);
         }
     }
@@ -87,7 +92,7 @@ void add_path(const char *str){
         //reallocation
         char**tmpPath =realloc(shellPath.path,sizeof(char*)*(shellPath.maxSize*2));
         if(tmpPath==NULL){
-            printf("add_path:reallocation failed.\n");
+            write(STDERR_FILENO, error_message, strlen(error_message));
             exit(1);
         }
         else{
