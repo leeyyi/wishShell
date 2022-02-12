@@ -24,7 +24,6 @@ void BATCH(const char* argv){
         insSet* myIns = parser(str);
         if(exec(myIns)==END_LOOP)
         break;
-        printf("%s\n",str);
         free(str);
         str=NULL;
         size_t size=0;

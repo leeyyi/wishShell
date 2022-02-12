@@ -6,27 +6,25 @@
 
 #IncludeRegexTransform: 
 
-../include/PATH.h
+../include/batch.h
+
+../include/constants.h
 
 ../include/parser.h
 
-/home/liyuyi/shell_proj/src/parser.c
+/home/liyuyi/shell_proj/src/batch.c
+batch.h
+/home/liyuyi/shell_proj/src/batch.h
 parser.h
 /home/liyuyi/shell_proj/src/parser.h
-PATH.h
-/home/liyuyi/shell_proj/src/PATH.h
-stdlib.h
--
-string.h
--
+constants.h
+/home/liyuyi/shell_proj/src/constants.h
 unistd.h
 -
 stdio.h
 -
-sys/types.h
+stdlib.h
 -
-sys/wait.h
--
-errno.h
+string.h
 -
 
