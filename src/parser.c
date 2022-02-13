@@ -6,7 +6,7 @@
 #include<stdio.h>
 #include<sys/types.h>
 #include<sys/wait.h>
-#include<errno.h>
+#include"build-in.h"
 #define defaultSize 10
 extern FILE* FP;
 extern PATH shellPath;
@@ -14,84 +14,17 @@ struct __insSet{
     char ***args;
 };
 insSet *parser(const char*Str){
-    char*str = strdup(Str);
-    int maxArgc=defaultSize;//初始最多只有十个参数
-    //第一个版本的解析,以后支持单语句多命令
-    insSet *tmp =malloc(sizeof(insSet));
-    if(tmp==NULL){
-        printf("[parser]:not enough space!!!.\n");
+    //初代版本,之后的版本应该支持指令并行
+    insSet* ins = malloc(sizeof(insSet));
+    if(ins==NULL)
+    {
+        printf("error occurred in parser:malloc.\n");
         exit(1);
     }
-    //初代版本就假装只有一个命令
-    //初始化
-    int numOfIns=1;
-    tmp->args=malloc(sizeof(char**)*(numOfIns+1));
-    if(tmp->args==NULL){
-        printf("[parser]:not enough space!!!.\n");
-        exit(1);
-    }
-    //填写内容
-    //第一个单词是命令
-    short int isSet=-1;
-    short int endOfStr=-1;
-    for(int i =0;str[i]!='\0';++i){
-        if(str[i]==' '){
-            if(isSet==-1)
-            continue;
-            else{
-                str[i]='\0';
-                endOfStr=i;
-                break;
-            }
-        }
-        else if(isSet==-1)
-        isSet=i;
-    }
-    if(isSet==-1){
-        tmp->args[0]=NULL;//只输入了空格
-        return tmp;
-    }
-    else{
-        //填写参数
-        int totalSize=0;
-        tmp->args[0]=malloc(sizeof(char*)*(maxArgc+1));
-        if(tmp->args[0]==NULL){
-            printf("[parser:]not enough space!!!.\n");
-            exit(1);
-        }
-        tmp->args[0][0]=strdup(&str[isSet]);
-        int totalArg=1;
-        if(endOfStr!=-1)    
-        {int i ;
-        int current=0;//0代表当前是剔除空格,1代表当前扫描单词
-        int startOfArg;
-        for(i = endOfStr+1;str[i]!='\0';++i){
-            if(current==0)
-            {
-                if(str[i]==' ')
-                continue;
-                else 
-                {
-                    current=1;
-                    startOfArg=i;
-                }
-            }
-            else{
-                if(str[i+1]=='\0'){
-                    tmp->args[0][totalArg++]=strdup(&str[startOfArg]);
-                }
-                else if(str[i+1]==' '){
-                    str[i+1]='\0';
-                    tmp->args[0][totalArg++]=strdup(&str[startOfArg]);
-                    i=i+2;
-                }
-                
-            }
-        }}
-        tmp->args[0][totalArg]=NULL;
-    }
-    free(str);
-    return tmp;
+    ins->args=malloc(sizeof(char**)*defaultSize);//最开始只支持10条并行语句
+    ins->args[0]=myStrSep(Str);
+    ins->args[1]=NULL;
+    return ins;
 }
 void afterExec(insSet* ins){
     for(int i =0;ins->args[i]!=NULL;++i){
@@ -108,8 +41,10 @@ int exec(insSet*ins){
     for(int i =0;ins->args[i]!=NULL;++i){
         int absoluteOK=1;//为0 是相对路径
         char *tmpAbs=NULL;
+        if(buildIn_try(ins->args[i]))
+        continue;
         if(ins->args[i][0][0]!='/'&&ins->args[i][0][0]!='.'){
-            for(int j =0;j<shellPath.counts;++j){
+            for(int j =0;shellPath.path[j]!=NULL;++j){
                 tmpAbs = malloc(sizeof(char)*(strlen(shellPath.path[j])+strlen(ins->args[i][0])+1));
                 strcpy(tmpAbs,shellPath.path[j]);
                 strcat(tmpAbs,"/");
@@ -121,14 +56,13 @@ int exec(insSet*ins){
                 free(tmpAbs);
                 tmpAbs=NULL;
             }
-            
         }
         if(absoluteOK){
             if(access(ins->args[i][0],X_OK)==0)
             {
             }
             else{
-                printf("the file is not existed.\n");
+                //printf("the file is not existed.\n");
             }
         }
         else{
@@ -144,11 +78,10 @@ int exec(insSet*ins){
         }
         else if(child==0){
             //child process
-            if(FP)
-            fclose(FP);
+            fflush(stdout);
             if(execv(ins->args[i][0],ins->args[i])==-1){
                 printf("[error]occurred in execv.\n");
-                exit(1);
+                _exit(1);
             }
         }
         else {
@@ -158,4 +91,55 @@ int exec(insSet*ins){
     }
     //执行完指令之后,要把所有内存都free掉
     afterExec(ins);
+}
+char**myStrSep(const char*str){
+    if(str==NULL)
+    return NULL;
+    char **argv = malloc(sizeof(char*)*(defaultSize+1));//默认只有十个参数
+    if(argv==0){
+        printf("error occurred in myStrSep malloc.\n");
+        exit(1);
+    }
+    int totalArg=0;
+    int startOfArg=0;
+    int inWord=0;
+    int remaining=defaultSize;
+    int i ;
+    for(i =0;str[i]!='\0';++i){
+        if(str[i]!=' '){
+            if(inWord)
+            continue;
+            else {
+                startOfArg=i;
+                inWord=1;
+            }
+        }
+        else{
+            if(inWord){
+                if(remaining==0){
+                    //reallocation
+                    char** tmp = realloc(argv,(totalArg*2+1)*sizeof(char*));
+                    if(argv==NULL){
+                        printf("error occurred in myStrSep :malloc.\n");
+                        exit(1);
+                    }
+                    argv=tmp;
+                    remaining=totalArg;
+                }
+                //复制str;
+                argv[totalArg++]=strndup(&str[startOfArg],i-startOfArg);
+                remaining--;
+                inWord=0;
+            }
+            else{
+                continue;
+            }
+        }
+    }
+    //处理最后一个单词
+    if(inWord){
+        argv[totalArg++]=strndup(&str[startOfArg],i-startOfArg);
+    }
+    argv[totalArg]=0;
+    return argv;
 }

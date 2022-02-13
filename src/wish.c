@@ -31,12 +31,8 @@ int main(int argc,char *argv[]){
 }
 void wishInit(){
     //初始化添加PATH;
-    shellPath.counts=0;
-    shellPath.maxSize=0;
     shellPath.path=NULL;
     add_path("/bin");
-//    printf("[debug:]%s %d %d\n",shellPath.path[0],shellPath.counts,shellPath.maxSize);
-
 }
 void IM()
 {
@@ -77,31 +73,13 @@ my_mode_t get_mode_t(int argc,char*argv[]){
     return ERROR_MODE;
 }
 void add_path(const char *str){
-    if(shellPath.path==0){
-        shellPath.maxSize=1;
-        shellPath.path = malloc(sizeof(char*));
-        if(shellPath.path==NULL)
-        {
-            write(STDERR_FILENO, error_message, strlen(error_message));
-            exit(1);
-        }
+    if(shellPath.path!=NULL){
+        //clear
+        for(int i =0;shellPath.path[i]!=NULL;++i)
+        free(shellPath.path[i]);
+        free(shellPath.path);
     }
-    else 
-    if(shellPath.counts+1>shellPath.maxSize)
-    {
-        //reallocation
-        char**tmpPath =realloc(shellPath.path,sizeof(char*)*(shellPath.maxSize*2));
-        if(tmpPath==NULL){
-            write(STDERR_FILENO, error_message, strlen(error_message));
-            exit(1);
-        }
-        else{
-            shellPath.path=tmpPath;
-            shellPath.maxSize*=2;
-        }
-    }
-    shellPath.path[shellPath.counts++]=strdup(str);
-    return ;
+    shellPath.path=myStrSep(str);
+    for(int i =0;shellPath.path!=NULL&&shellPath.path[i]!=NULL;++i)
+    printf("%s\n",shellPath.path[i]);
 }
-//11号工作：填完坑,能够完成BATCH,INTERACTIVE的功能
-//随后继续看Swapping的部分

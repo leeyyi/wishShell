@@ -3,4 +3,5 @@
 typedef struct __insSet insSet;
 insSet *parser(const char*);
 int exec(insSet*);
+char**myStrSep(const char*str);
 #endif
