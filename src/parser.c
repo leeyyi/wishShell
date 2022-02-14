@@ -14,17 +14,62 @@ extern PATH shellPath;
 struct __insSet{
     char ***args;
 };
-insSet *parser(const char*Str){
-    //初代版本,之后的版本应该支持指令并行
+static int totalSize=0;
+static int maxSize=defaultSize;
+void add_ins(insSet* ins,const char*str){
+    if(totalSize+1==maxSize){
+        char *** tmpArgs = realloc(ins->args,sizeof(char**)*(maxSize+1));
+        if(tmpArgs==0)
+        {
+            printf("error occurred in realloc in add_ins.\n");
+            exit(1);
+        }
+        ins->args=tmpArgs;
+    }
+    ins->args[totalSize++]=myStrSep(str);
+}
+insSet *parser(const char*SStr){
+    totalSize=0;
+    maxSize=defaultSize;
+    char * Str=strdup(SStr);
+    if(Str==NULL){
+        printf("error occurred in strdup parser.c.\n");
+        exit(1);
+    }
     insSet* ins = malloc(sizeof(insSet));
+    ins->args=malloc(sizeof(char**)*maxSize);
+    if(ins==NULL||ins->args==NULL){
+        printf("error occurred in malloc :parser.c.\n");
+        exit(1);
+    }
     if(ins==NULL)
     {
         printf("error occurred in parser:malloc.\n");
         exit(1);
     }
-    ins->args=malloc(sizeof(char**)*defaultSize);//最开始只支持10条并行语句
-    ins->args[0]=myStrSep(Str);
-    ins->args[1]=NULL;
+    int argStart=-1;
+    for(int i =0;Str[i]!='\0';++i){
+        if(Str[i]=='&'){
+            if(argStart!=-1){
+                Str[i]=0;
+                add_ins(ins,&Str[argStart]);
+                argStart=-1;
+            }
+        }
+        else if(Str[i]==' ')
+        continue;
+        else if(argStart==-1)
+        argStart=i;
+    }
+    if(argStart!=-1)
+    add_ins(ins,&Str[argStart]);
+    ins->args[totalSize]=NULL;
+    free(Str);
+    //打印接受参数的代码
+    // for(int i =0;ins->args[i]!=NULL;++i){
+    //     for(int j = 0;ins->args[i][j]!=NULL;++j)
+    //     printf("%s %d %d \n",ins->args[i][j],i,j);
+    // }
     return ins;
 }
 void afterExec(insSet* ins){
@@ -87,7 +132,9 @@ int exec(insSet*ins){
         if(child>0){
             //parent process
             waitpid(child,NULL,WUNTRACED|WCONTINUED);
-            return 0;
+            continue;
+            // return 0 ;
+            
         }
         else if(child==0){
             //child process
