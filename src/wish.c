@@ -80,6 +80,4 @@ void add_path(const char *str){
         free(shellPath.path);
     }
     shellPath.path=myStrSep(str);
-    for(int i =0;shellPath.path!=NULL&&shellPath.path[i]!=NULL;++i)
-    printf("%s\n",shellPath.path[i]);
 }

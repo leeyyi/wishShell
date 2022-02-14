@@ -21,11 +21,10 @@ void buildIn_cd(const char **args){
         write(STDERR_FILENO, error_message, strlen(error_message));
         return ;
     }
-    free(args);
 }
 void buildIn_path(const char **args){
     if(args[1]==NULL)
-    add_path(NULL);
+    add_path("");
     else{
         char* tmpStr = strdup(args[1]);
         for(int i =2;args[i]!=NULL;++i){

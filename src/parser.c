@@ -27,7 +27,9 @@ insSet *parser(const char*Str){
     return ins;
 }
 void afterExec(insSet* ins){
+    if(ins->args!=0)
     for(int i =0;ins->args[i]!=NULL;++i){
+        if(ins->args[i]!=0)
         for(int j =0;ins->args[i][j]!=NULL;++j){
             free(ins->args[i][j]);
         }
@@ -38,6 +40,7 @@ void afterExec(insSet* ins){
 }
 int exec(insSet*ins){
     //对于每一条指令
+    if(ins->args!=0)
     for(int i =0;ins->args[i]!=NULL;++i){
         int absoluteOK=1;//为0 是相对路径
         char *tmpAbs=NULL;
@@ -93,8 +96,6 @@ int exec(insSet*ins){
     afterExec(ins);
 }
 char**myStrSep(const char*str){
-    if(str==NULL)
-    return NULL;
     char **argv = malloc(sizeof(char*)*(defaultSize+1));//默认只有十个参数
     if(argv==0){
         printf("error occurred in myStrSep malloc.\n");
@@ -105,6 +106,7 @@ char**myStrSep(const char*str){
     int inWord=0;
     int remaining=defaultSize;
     int i ;
+    if(str!=NULL)
     for(i =0;str[i]!='\0';++i){
         if(str[i]!=' '){
             if(inWord)
