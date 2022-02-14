@@ -6,6 +6,7 @@
 #include<stdio.h>
 #include<sys/types.h>
 #include<sys/wait.h>
+#include<fcntl.h>
 #include"build-in.h"
 #define defaultSize 10
 extern FILE* FP;
@@ -44,6 +45,8 @@ int exec(insSet*ins){
     for(int i =0;ins->args[i]!=NULL;++i){
         int absoluteOK=1;//为0 是相对路径
         char *tmpAbs=NULL;
+        if(ins->args[i][0]==NULL)
+        continue;
         if(buildIn_try(ins->args[i]))
         continue;
         if(ins->args[i][0][0]!='/'&&ins->args[i][0][0]!='.'){
@@ -73,6 +76,13 @@ int exec(insSet*ins){
             free(ins->args[i][0]);
             ins->args[i][0]=tmpAbs;
         }
+        int redirec=-1;//如果后续增加循环执行,应该每一轮循环都把redirec重置-1
+        for(int findRed=0;ins->args[i][findRed]!=NULL;++findRed){
+            if(strcmp(ins->args[i][findRed],">")==0){
+                redirec=findRed;
+                break;
+            }
+        }
         pid_t child = fork();
         if(child>0){
             //parent process
@@ -82,7 +92,25 @@ int exec(insSet*ins){
         else if(child==0){
             //child process
             fflush(stdout);
+            int fd = -1;
+            if(redirec!=-1){
+                if(close(STDOUT_FILENO)){
+                    printf("error occurred in close stdout.\n");
+                }
+                else 
+                if(ins->args[i][redirec+1]==NULL||(fd=open(ins->args[i][redirec+1],O_CREAT|O_TRUNC|O_WRONLY,S_IRUSR|S_IWUSR))==0){
+                    fprintf(stderr,"error occurred in open new file stream.\n");
+                    if(fd==-1||fd==0)
+                    close(fd);
+                    _exit(1);
+                }
+                else{
+                    ins->args[i][redirec]=NULL;
+                }
+            }
             if(execv(ins->args[i][0],ins->args[i])==-1){
+                if(fd==-1||fd==0)
+                close(fd);
                 printf("[error]occurred in execv.\n");
                 _exit(1);
             }
