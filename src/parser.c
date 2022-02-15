@@ -16,12 +16,14 @@ struct __insSet{
 };
 static int totalSize=0;
 static int maxSize=defaultSize;
+extern char error_message[];
+pid_t pid[10];
 void add_ins(insSet* ins,const char*str){
     if(totalSize+1==maxSize){
         char *** tmpArgs = realloc(ins->args,sizeof(char**)*(maxSize+1));
         if(tmpArgs==0)
         {
-            printf("error occurred in realloc in add_ins.\n");
+            write(STDERR_FILENO, error_message, strlen(error_message));
             exit(1);
         }
         ins->args=tmpArgs;
@@ -33,18 +35,18 @@ insSet *parser(const char*SStr){
     maxSize=defaultSize;
     char * Str=strdup(SStr);
     if(Str==NULL){
-        printf("error occurred in strdup parser.c.\n");
+        write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
     insSet* ins = malloc(sizeof(insSet));
     ins->args=malloc(sizeof(char**)*maxSize);
     if(ins==NULL||ins->args==NULL){
-        printf("error occurred in malloc :parser.c.\n");
+        write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
     if(ins==NULL)
     {
-        printf("error occurred in parser:malloc.\n");
+        write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
     int argStart=-1;
@@ -80,9 +82,11 @@ void afterExec(insSet* ins){
             free(ins->args[i][j]);
         }
         free(ins->args[i]);
+        waitpid(pid[i],NULL,WUNTRACED|WCONTINUED);
     }
     free(ins->args);
     free(ins);
+    
 }
 int exec(insSet*ins){
     //对于每一条指令
@@ -122,19 +126,23 @@ int exec(insSet*ins){
             ins->args[i][0]=tmpAbs;
         }
         int redirec=-1;//如果后续增加循环执行,应该每一轮循环都把redirec重置-1
+        //int fd = -1;
         for(int findRed=0;ins->args[i][findRed]!=NULL;++findRed){
             if(strcmp(ins->args[i][findRed],">")==0){
                 redirec=findRed;
                 break;
             }
         }
-        pid_t child = fork();
+        if(redirec!=-1&&(ins->args[i][redirec+1]==NULL||ins->args[i][redirec+2]!=NULL))
+        {
+        write(STDERR_FILENO, error_message, strlen(error_message));
+        continue;}
+        pid_t child =pid[i]= fork();
         if(child>0){
             //parent process
-            waitpid(child,NULL,WUNTRACED|WCONTINUED);
+            //waitpid(child,NULL,WUNTRACED|WCONTINUED);
             continue;
             // return 0 ;
-            
         }
         else if(child==0){
             //child process
@@ -142,11 +150,11 @@ int exec(insSet*ins){
             int fd = -1;
             if(redirec!=-1){
                 if(close(STDOUT_FILENO)){
-                    printf("error occurred in close stdout.\n");
+                    write(STDERR_FILENO, error_message, strlen(error_message));
                 }
                 else 
                 if(ins->args[i][redirec+1]==NULL||(fd=open(ins->args[i][redirec+1],O_CREAT|O_TRUNC|O_WRONLY,S_IRUSR|S_IWUSR))==0){
-                    fprintf(stderr,"error occurred in open new file stream.\n");
+                    write(STDERR_FILENO, error_message, strlen(error_message));
                     if(fd==-1||fd==0)
                     close(fd);
                     _exit(1);
@@ -158,12 +166,12 @@ int exec(insSet*ins){
             if(execv(ins->args[i][0],ins->args[i])==-1){
                 if(fd==-1||fd==0)
                 close(fd);
-                printf("[error]occurred in execv.\n");
+                write(STDERR_FILENO, error_message, strlen(error_message));
                 _exit(1);
             }
         }
         else {
-            printf("[exec:fork]error occurs.\n");
+            write(STDERR_FILENO, error_message, strlen(error_message));
             exit(1);
         }
     }
@@ -173,7 +181,7 @@ int exec(insSet*ins){
 char**myStrSep(const char*str){
     char **argv = malloc(sizeof(char*)*(defaultSize+1));//默认只有十个参数
     if(argv==0){
-        printf("error occurred in myStrSep malloc.\n");
+        write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }
     int totalArg=0;
@@ -197,7 +205,7 @@ char**myStrSep(const char*str){
                     //reallocation
                     char** tmp = realloc(argv,(totalArg*2+1)*sizeof(char*));
                     if(argv==NULL){
-                        printf("error occurred in myStrSep :malloc.\n");
+                        write(STDERR_FILENO, error_message, strlen(error_message));
                         exit(1);
                     }
                     argv=tmp;

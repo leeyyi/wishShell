@@ -5,12 +5,14 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<error.h>
+static 
+char error_message[30] = "An error has occurred\n";
 FILE*FP=NULL;
 void BATCH(const char* argv){
     FILE* fp = fopen(argv,"r");
     FP=fp;
     if(fp==NULL){
-        char error_message[30] = "An error has occurred\n";
         write(STDERR_FILENO, error_message, strlen(error_message));
         exit(1);
     }

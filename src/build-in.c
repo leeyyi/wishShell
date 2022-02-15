@@ -15,7 +15,7 @@ void buildIn_cd(const char **args){
         return ;
     }
     else if(!chdir(args[1])){
-        printf("currenttly working directory:%s\n",args[1]);
+        //printf("currenttly working directory:%s\n",args[1]);
     }
     else{
         write(STDERR_FILENO, error_message, strlen(error_message));
@@ -43,8 +43,14 @@ int buildIn_try(const char **str){
     buildIn_cd(str);
     else if(str[0][0]=='p'&&str[0][1]=='a'&&str[0][2]=='t'&&str[0][3]=='h')
     buildIn_path(str);
-    else if(str[0][0]=='e'&&str[0][1]=='x'&&str[0][2]=='i'&&str[0][3]=='t')
-    buildIn_exit();
+    else if(str[0][0]=='e'&&str[0][1]=='x'&&str[0][2]=='i'&&str[0][3]=='t'){
+        if(str[1]==NULL)
+        buildIn_exit();
+        else{
+            write(STDERR_FILENO, error_message, strlen(error_message));
+        }
+    }
+    
     else
     return 0;
     return 1;

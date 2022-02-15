@@ -26,7 +26,7 @@ int main(int argc,char *argv[]){
         case INTER_MODE:
         IM();
         break;
-        default:printf("not implemented mode.\n");
+        default:write(STDERR_FILENO, error_message, strlen(error_message));
     }
 }
 void wishInit(){
